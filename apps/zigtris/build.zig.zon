@@ -1,0 +1,16 @@
+.{
+    .name = .zigtris,
+    .version = "0.15.2",
+    .dependencies = .{
+        .mibu = .{
+            .url = "git+https://github.com/xyaman/mibu.git#be3713ff04e7db3584669e679253ef388e426dc6",
+            .hash = "mibu-0.0.1-dev-Ddr1riTEAAAYAe1TWBT--W8fPUL8UyBE7dy-yNNZ3z5V",
+        },
+        .zigtris = .{
+            .url = "git+https://github.com/ringtailsoftware/zigtris.git#1dc9fc4c5dae709279bfe0708e3fae5c810837f0",
+            .hash = "zigtris-0.0.1-of0vIotsAACy777-kWnBDCH2tYIprpqXLpidQgvRF6r1",
+        },
+    },
+    .paths = .{""},
+    .fingerprint = 0x1f86de49aac15bec,
+}
