@@ -7,4 +7,5 @@
 #define IOREQ_PRINTX 0x13D
 #define IOREQ_MILLIS 0x13F
 #define IOREQ_PRINTC 0x140
+#define IOREQ_GETC 0x141
 
