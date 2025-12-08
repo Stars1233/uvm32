@@ -53,7 +53,7 @@ static uint32_t syscall(uint32_t id, uint32_t param) {
 #define printdec(x)     syscall_cast(UVM32_SYSCALL_PRINTDEC, x)
 #define printhex(x)     syscall_cast(UVM32_SYSCALL_PRINTHEX, x)
 #define millis()        syscall_cast(UVM32_SYSCALL_MILLIS, 0)
-#define putc()          syscall_cast(UVM32_SYSCALL_PUTC, 0)
+#define putc(x)         syscall_cast(UVM32_SYSCALL_PUTC, x)
 #define getc()          syscall_cast(UVM32_SYSCALL_GETC, 0)
 #define yield()         syscall_cast(UVM32_SYSCALL_YIELD, 0)
 
