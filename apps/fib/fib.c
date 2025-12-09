@@ -1,6 +1,11 @@
 #define USE_MAIN
 #include "uvm32_target.h"
 
+void write(int n) {
+    printdec(n);
+    println("");
+}
+
 // print n terms of fibonacci series
 void printFib(int n) {
     int prev1 = 1;
@@ -11,11 +16,11 @@ void printFib(int n) {
             int curr = prev1 + prev2;
             prev2 = prev1;
             prev1 = curr;
-            printdec(curr);
+            write(curr);
         } else if (i == 1) {
-            printdec(prev2);
+            write(prev2);
         } else if (i == 2) {
-            printdec(prev1);
+            write(prev1);
         }
     }
 }
@@ -27,14 +32,14 @@ void fib_recursive(int n, int prev1, int prev2) {
     }
     
     int curr = prev1 + prev2;
-    printdec(curr);
+    write(curr);
   
     return fib_recursive(n - 1, prev2, curr);
 }
 
 void printFibRec(int n) {
-    printdec(0);
-    printdec(1);
+    write(0);
+    write(1);
     fib_recursive(n, 0, 1);
 }
 
