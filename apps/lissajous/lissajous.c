@@ -122,5 +122,8 @@ void main(void) {
         beta += 0.05;
         freq1 += 0.01;
         freq2 += 0.005;
+        if (getc() != 0xFFFFFFFF) {
+            return;
+        }
     }
 }
