@@ -17,6 +17,7 @@ uvm32 is a minimalist, dependency-free virtual machine sandbox designed for micr
 * Simple, opinionated execution model
 * Safe minimally typed FFI
 * Small enough for "if this then that" scripts/plugins, capable enough for much more
+* Aims for safety over speed, bad code running in the VM should never be able to crash the host
 
 Although based on a fully fledged CPU emulator, uvm32 is intended for executing custom script like logic, not for simulating hardware.
 
