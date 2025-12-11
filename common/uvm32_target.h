@@ -14,6 +14,8 @@
 typedef uint32_t size_t;
 typedef int32_t ssize_t;
 
+typedef uint32_t uintptr_t;
+
 #define NULL 0
 
 void *memcpy(void *dst, const void *src, int len);
