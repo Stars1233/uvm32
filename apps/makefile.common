@@ -29,7 +29,7 @@ disasm_common: all
 	$(PREFIX)objdump -S -d -f ${PROJECT}.elf
 
 test_common: all
-	${TOPDIR}/hosts/host/host ${PWD}/${PROJECT}.bin
+	${TOPDIR}/hosts/host/host ${HOST_EXTRA} ${PWD}/${PROJECT}.bin
 
 clean_common:
 	rm -f ${PROJECT}.o ${PROJECT}.elf ${PROJECT}.bin

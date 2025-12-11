@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <termios.h>
 #include <signal.h>
+#include <getopt.h>
 #include "uvm32.h"
 
 #include "../common/uvm32_common_custom.h"
@@ -137,25 +138,53 @@ bool memdump(const char *filename, const uint8_t *buf, int len) {
     return true;
 }
 
+void usage(const char *name) {
+    printf("%s [options] filename.bin\n", name);
+    printf("Options:\n");
+    printf("  -h                            show help\n");
+    printf("  -i <num instructions>         max instrs before requiring a syscall\n");
+    printf("  -e <extram size>              numbers of bytes for extram\n");
+    exit(1);
+}
+
 int main(int argc, char *argv[]) {
     uvm32_state_t vmst;
     uint32_t max_instrs_per_run = 500000;
     clock_t start_time = clock() / (CLOCKS_PER_SEC / 1000);
-
-    argc--;
-    argv++;
-
-    if (argc < 1) {
-        printf("<romfile> [max_instrs_per_run]\n");
-        return 1;
-    }
-
-    if (argc > 1) {
-        max_instrs_per_run = strtoll(argv[1], NULL, 10);
-    }
-
+    char c;
+    const char *rom_filename = NULL;
+    uint32_t extram_len = 0;
+    uint32_t *extram_buf = NULL;
+    uvm32_evt_t evt;
+    bool isrunning = true;
+    uint32_t total_instrs = 0;
+    uint32_t num_syscalls = 0;
     int romlen = 0;
-    uint8_t *rom = read_file(argv[0], &romlen);
+
+    // parse commandline args
+    while ((c = getopt(argc, argv, "hi:e:")) != -1) {
+        switch(c) {
+            case 'h':
+                usage(argv[0]);
+            break;
+            case 'i':
+                max_instrs_per_run = strtoll(optarg, NULL, 10);
+                if (max_instrs_per_run < 1) {
+                    usage(argv[0]);
+                }
+            break;
+            case 'e':
+                extram_len = strtoll(optarg, NULL, 10);
+            break;
+        }
+    }
+    if (optind < argc) {
+        rom_filename = argv[optind];
+    } else {
+        usage(argv[0]);
+    }
+
+    uint8_t *rom = read_file(rom_filename, &romlen);
     if (NULL == rom) {
         printf("file read failed!\n");
         return 1;
@@ -168,10 +197,14 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    uvm32_evt_t evt;
-    bool isrunning = true;
-    uint32_t total_instrs = 0;
-    uint32_t num_syscalls = 0;
+    if (extram_len > 0) {
+        extram_buf = (uint32_t *)malloc(extram_len);
+        if (NULL == extram_buf) {
+            printf("Failed to allocate extram!\n");
+            return 1;
+        }
+        uvm32_extram(&vmst, extram_buf, extram_len);
+    }
 
     // setup terminal for getch()
     enableRawMode();
@@ -254,6 +287,9 @@ int main(int argc, char *argv[]) {
     printf("Executed total of %d instructions and %d syscalls\n", (int)total_instrs, (int)num_syscalls);
 
     free(rom);
+    if (extram_buf != NULL) {
+        free(extram_buf);
+    }
 
     // put terminal back to how it was
     disableRawMode();

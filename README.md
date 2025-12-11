@@ -110,7 +110,9 @@ Then, from inside the docker shell
 
     make
 
-    ./host/host apps/helloworld/helloworld.bin
+    ./hosts/host/host apps/helloworld/helloworld.bin
+
+`host` is the command line test VM for running samples. Run `host -h` for a full list of options.
 
 ## Native build
 
