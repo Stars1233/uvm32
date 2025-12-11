@@ -5,7 +5,13 @@
 #error Define UVM32_MEMORY_SIZE
 #endif
 
-#define UVM32_NULL (void *)0
+#ifndef CUSTOM_STDLIB_H
+#include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
+#else
+#include CUSTOM_STDLIB_H
+#endif
 
 // On an invalid operation, an error is set in uvm32_state_t, but a valid pointer still needs to be temporarily used
 static uint32_t garbage;
@@ -70,7 +76,7 @@ void uvm32_init(uvm32_state_t *vmst) {
     vmst->status = UVM32_STATUS_PAUSED;
 
     vmst->extramLen = 0;
-    vmst->extram = (uint32_t *)UVM32_NULL;
+    vmst->extram = (uint32_t *)NULL;
     vmst->extramDirty = false;
 
     vmst->core.pc = MINIRV32_RAM_IMAGE_OFFSET;
@@ -91,7 +97,7 @@ bool uvm32_load(uvm32_state_t *vmst, const uint8_t *rom, int len) {
     }
 
     UVM32_MEMCPY(vmst->memory, rom, len);
-    vmst->stack_canary = (uint8_t *)UVM32_NULL;
+    vmst->stack_canary = (uint8_t *)NULL;
     
     return true;
 }
@@ -102,7 +108,7 @@ bool get_safeptr_null_terminated(uvm32_state_t *vmst, uint32_t addr, uvm32_evt_s
     uint32_t p = ptrstart;
     if (p >= UVM32_MEMORY_SIZE) {
         setStatusErr(vmst, UVM32_ERR_MEM_RD);
-        buf->ptr = (uint8_t *)UVM32_NULL;
+        buf->ptr = (uint8_t *)NULL;
         buf->len = 0;
         return false;
     }
@@ -110,7 +116,7 @@ bool get_safeptr_null_terminated(uvm32_state_t *vmst, uint32_t addr, uvm32_evt_s
         p++;
         if (p >= UVM32_MEMORY_SIZE) {
             setStatusErr(vmst, UVM32_ERR_MEM_RD);
-            buf->ptr = (uint8_t *)UVM32_NULL;
+            buf->ptr = (uint8_t *)NULL;
             buf->len = 0;
             return false;
         }
@@ -124,7 +130,7 @@ bool get_safeptr(uvm32_state_t *vmst, uint32_t addr, uint32_t len, uvm32_evt_sys
     uint32_t ptrstart = addr - MINIRV32_RAM_IMAGE_OFFSET;
     if ((ptrstart > UVM32_MEMORY_SIZE) || (ptrstart + len >= UVM32_MEMORY_SIZE)) {
         setStatusErr(vmst, UVM32_ERR_MEM_RD);
-        buf->ptr = (uint8_t *)UVM32_NULL;
+        buf->ptr = (uint8_t *)NULL;
         buf->len = 0;
         return false;
     }
@@ -152,7 +158,7 @@ uint32_t uvm32_run(uvm32_state_t *vmst, uvm32_evt_t *evt, uint32_t instr_meter) 
         orig_instr_meter = min_instrs;
     }
 
-    if (vmst->stack_canary != UVM32_NULL && *vmst->stack_canary != STACK_CANARY_VALUE) {
+    if (vmst->stack_canary != NULL && *vmst->stack_canary != STACK_CANARY_VALUE) {
         setStatusErr(vmst, UVM32_ERR_INTERNAL_CORE);
         setup_err_evt(vmst, evt);
         return orig_instr_meter - instr_meter;
@@ -189,7 +195,7 @@ uint32_t uvm32_run(uvm32_state_t *vmst, uvm32_evt_t *evt, uint32_t instr_meter) 
                     break;
                     case UVM32_SYSCALL_STACKPROTECT: {
                         // don't allow errant code to change it once set
-                        if (vmst->stack_canary == (uint8_t *)UVM32_NULL) {
+                        if (vmst->stack_canary == (uint8_t *)NULL) {
                             uint32_t param0 = vmst->core.regs[10]; // a0
                             uint32_t mem_offset = param0 - MINIRV32_RAM_IMAGE_OFFSET;
                             mem_offset &= ~0xF; // round up by 16 bytes
@@ -332,7 +338,7 @@ uint32_t uvm32_extramLoad(void *userdata, uint32_t addr, uint32_t accessTyp) {
     uvm32_state_t *vmst = (uvm32_state_t *)userdata;
     addr -= UVM32_EXTRAM_BASE;
 
-    if (vmst->extram != UVM32_NULL) {
+    if (vmst->extram != NULL) {
         if (addr < vmst->extramLen) {
             switch(accessTyp) {
                 case 0:
@@ -365,7 +371,7 @@ uint32_t uvm32_extramLoad(void *userdata, uint32_t addr, uint32_t accessTyp) {
 uint32_t uvm32_extramStore(void *userdata, uint32_t addr, uint32_t val, uint32_t accessTyp) {
     uvm32_state_t *vmst = (uvm32_state_t *)userdata;
     addr -= UVM32_EXTRAM_BASE;
-    if (vmst->extram != UVM32_NULL) {
+    if (vmst->extram != NULL) {
         if (addr < vmst->extramLen) {
             switch(accessTyp) {
                 case 0:

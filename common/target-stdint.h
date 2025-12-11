@@ -27,5 +27,6 @@ size_assert(int16_t, 2);
 size_assert(int8_t, 1);
 
 #define INT32_MIN 0
+#define INT16_MAX 32767
 
 #endif

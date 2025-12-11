@@ -11,6 +11,15 @@
 
 #include "target-stdint.h"
 
+typedef uint32_t size_t;
+typedef int32_t ssize_t;
+
+#define NULL 0
+
+void *memcpy(void *dst, const void *src, int len);
+void *memset(void *buf, int c, int len);
+void *memmove(void *dest, const void *src, size_t len);
+
 static uint32_t syscall(uint32_t id, uint32_t param1, uint32_t param2) {
     register uint32_t a0 asm("a0") = (uint32_t)(param1);
     register uint32_t a1 asm("a1") = (uint32_t)(param2);
