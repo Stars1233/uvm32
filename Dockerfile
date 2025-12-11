@@ -33,3 +33,5 @@ RUN curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/inst
 RUN arduino-cli core install arduino:avr
 RUN apt-get install -y qemu-system-misc
 
+# host-sdl
+RUN apt-get install -y libsdl3-0 libsdl3-dev

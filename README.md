@@ -120,6 +120,12 @@ Then, from inside the docker shell
 
 The example VM hosts should all build with any C compiler. To build all of the examples in `apps`, you will need a RISC-V cross compiler, Zig 0.15.2 and Rust (stable). To build the example `host-arduino` you will need `arduino-cli`.
 
+On mac
+
+    brew install arduino-cli riscv64-elf-gcc riscv64-elf-binutils sdl3
+    make
+
+
 ## Quickstart API
 
 ```c
