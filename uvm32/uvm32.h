@@ -1,6 +1,3 @@
-#ifndef UVM32_H
-#define UVM32_H 1
-
 /*!
 https://github.com/ringtailsoftware/uvm32
 
@@ -26,6 +23,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+
+#ifndef UVM32_H
+#define UVM32_H 1
 
 /*! To use uvm32 in an environment without standard library headers, define CUSTOM_STDLIB_H to the name of header providing the equivalent types to stdint.h and stdbool.h */
 #ifndef CUSTOM_STDLIB_H

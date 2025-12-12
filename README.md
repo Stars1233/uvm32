@@ -4,12 +4,33 @@ uvm32 is a minimalist, dependency-free virtual machine sandbox designed for micr
 
 On an [STM32L0](https://www.st.com/en/microcontrollers-microprocessors/stm32l0-series.html) (ARM Cortex-M0+) the required footprint is under 4KB flash/1KB RAM.
 
+uvm32 is a RISC-V emulator, wrapped in a management interface and provided with tools to build efficient code to run in it.
+
 ## What is it for?
 
 * As a no-frills alternative to embedded script engines ([Lua](https://www.lua.org/), [Duktape](https://duktape.org/), [MicroPython](https://micropython.org/), etc)
 * As a [sandbox](https://en.wikipedia.org/wiki/Write_once,_run_anywhere) to isolate untrusted or unreliable elements of a system
 * As a way to allow development in modern systems programming languages where a compiler for the target may not be available ([rust-hello](apps/rust-hello))
 * As a way to [write once, run anywhere](https://en.wikipedia.org/wiki/Write_once,_run_anywhere) and avoid maintaining multiple software variants
+
+## How does it compare to the alternatives?
+
+Many scripting languages and virtual machines are available for embedding in small systems and they all make tradeoffs in different dimensions.
+
+uvm32 aims for:
+
+* Small footprint (suitable for embedded devices, games and apps)
+* Support well-known programming languages for VM code (with high quality dev tools)
+* Ease of integration into existing software
+* Flexibility of paradigm (event driven, polling, multi-processor)
+* Robustness against misbehaving VM code
+
+uvm32 does not aim for:
+
+* Frictionless [FFI](https://en.wikipedia.org/wiki/Foreign_function_interface) (no direct function calls between host and VM code)
+* Maximum possible efficiency
+* The simplest scripting experience for VM code (a develop-compile-run cycle is expected)
+* "Batteries included" libraries to do stdio, networking, etc
 
 ## Features
 
@@ -29,7 +50,7 @@ uvm32 is a tiny virtual machine, all of the code is in [uvm32](uvm32).
 
 A minimal example of a host to run code in is at [host-mini](hosts/host-mini).
 
-Everything else is a more advanced host, or a sample application which could be run.
+Everything else is a more advanced host example, or a sample application which could be run in a host.
 
 ## Example
 
@@ -66,10 +87,10 @@ int main(int argc, char *argv[]) {
             case UVM32_EVT_SYSCALL:    // vm has paused to handle UVM32_SYSCALL
                 switch(evt.data.syscall.code) {
                     case UVM32_SYSCALL_PUTC:
-                        printf("%c", uvm32_getval(&vmst, &evt, ARG0));
+                        printf("%c", uvm32_arg_getval(&vmst, &evt, ARG0));
                     break;
                     case UVM32_SYSCALL_PRINTLN: {
-                        const char *str = uvm32_getcstr(&vmst, &evt, ARG0);
+                        const char *str = uvm32_arg_getcstr(&vmst, &evt, ARG0);
                         printf("%s\n", str);
                     } break;
                     case UVM32_SYSCALL_YIELD:
@@ -119,6 +140,8 @@ int main(int argc, char *argv[]) {
     * [apps/self](apps/self) host-mini with embedded mandelbrot generation program, compiled as an app (VM running VM)
 
 ## Quickstart (docker)
+
+The code in [uvm32](uvm32) to build a VM host is very portable and requires only a C compiler. However, many of the examples provided show how to build target code with different languages and tools. A Dockerfile is provided to set up the required environment.
 
     make dockerbuild
     make dockershell
