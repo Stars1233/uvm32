@@ -13,6 +13,18 @@ uvm32 is a RISC-V emulator, wrapped in a management interface and provided with 
 * As a way to allow development in modern systems programming languages where a compiler for the target may not be available ([rust-hello](apps/rust-hello))
 * As a way to [write once, run anywhere](https://en.wikipedia.org/wiki/Write_once,_run_anywhere) and avoid maintaining multiple software variants
 
+## Features
+
+* Bytecode example apps written in C, Zig, Rust and assembly
+* Non-blocking design, preventing misbehaving bytecode from stalling the host
+* No assumptions about host IO capabilities (no stdio)
+* Simple, opinionated execution model
+* Safe minimally typed FFI
+* Small enough for "if this then that" scripts/plugins, capable enough for [much more](apps/zigdoom)
+* Aims for safety over speed, bad code running in the VM should never be able to crash the host
+
+Although based on a [fully fledged CPU emulator](https://github.com/cnlohr/mini-rv32ima), uvm32 is intended for executing custom script like logic, not for simulating hardware.
+
 ## How does it compare to the alternatives?
 
 Many scripting languages and virtual machines are available for embedding in small systems and they all make tradeoffs in different dimensions.
@@ -25,24 +37,12 @@ uvm32 aims for:
 * Flexibility of paradigm (event driven, polling, multi-processor)
 * Robustness against misbehaving VM code
 
-uvm32 does not aim for:
+uvm32 does *not* aim for:
 
 * Frictionless [FFI](https://en.wikipedia.org/wiki/Foreign_function_interface) (no direct function calls between host and VM code)
 * Maximum possible efficiency
 * The simplest scripting experience for VM code (a develop-compile-run cycle is expected)
 * "Batteries included" libraries to do stdio, networking, etc
-
-## Features
-
-* Bytecode example apps written in C, Zig, Rust and assembly
-* Non-blocking design, preventing misbehaving bytecode from stalling the host
-* No assumptions about host IO capabilities (no stdio)
-* Simple, opinionated execution model
-* Safe minimally typed FFI
-* Small enough for "if this then that" scripts/plugins, capable enough for [much more](apps/zigdoom)
-* Aims for safety over speed, bad code running in the VM should never be able to crash the host
-
-Although based on a [fully fledged CPU emulator](https://github.com/cnlohr/mini-rv32ima), uvm32 is intended for executing custom script like logic, not for simulating hardware.
 
 ## Understanding this repo
 
@@ -156,7 +156,7 @@ Then, from inside the docker shell
 
 ## More information
 
-The best source of information is the header file [uvm32/uvm32.h](uvm32/uvm32.h)
+The best source of information is the header file [uvm32/uvm32.h](uvm32/uvm32.h) and the [tests](test).
 
 Also see [doc/README.md](doc/README.md)
 
