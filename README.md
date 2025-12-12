@@ -133,7 +133,9 @@ Then, from inside the docker shell
 
 ## More information
 
-Start at [doc/README.md](doc/README.md)
+The best source of information is the header file [uvm32/uvm32.h](uvm32/uvm32.h)
+
+Also see [doc/README.md](doc/README.md)
 
 ## License
 
