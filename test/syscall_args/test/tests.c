@@ -190,3 +190,24 @@ void test_syscall_args_string_never_terminates(void) {
     TEST_ASSERT_EQUAL(evt.data.err.errcode, UVM32_ERR_MEM_RD);
 }
 
+void test_syscall_args_bufrd_toolarge(void) {
+    // run the vm
+    uvm32_run(&vmst, &evt, 1000);
+    // check for picktest syscall
+    TEST_ASSERT_EQUAL(evt.typ, UVM32_EVT_SYSCALL);
+    TEST_ASSERT_EQUAL(evt.data.syscall.code, SYSCALL_PICKTEST);
+    uvm32_arg_setval(&vmst, &evt, RET, SYSCALL_C);
+
+    uvm32_run(&vmst, &evt, 1000);
+    TEST_ASSERT_EQUAL(evt.typ, UVM32_EVT_SYSCALL);
+    TEST_ASSERT_EQUAL(evt.data.syscall.code, SYSCALL_C);
+
+    // get buffer described by ptr=ARG0,len=ARG1
+    uvm32_slice_t buf = uvm32_arg_getslice_fixed(&vmst, &evt, ARG0, 256);
+    TEST_ASSERT_EQUAL(0, buf.len);
+    // check for error state
+    uvm32_run(&vmst, &evt, 100);
+    TEST_ASSERT_EQUAL(evt.typ, UVM32_EVT_ERR);
+    TEST_ASSERT_EQUAL(evt.data.err.errcode, UVM32_ERR_MEM_RD);
+}
+
