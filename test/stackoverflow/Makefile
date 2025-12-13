@@ -1,4 +1,3 @@
 TOPDIR=../..
 UVM32_MEMORY_SIZE=512
-CFLAGS=-DUVM32_STACK_PROTECTION
 include ${TOPDIR}/test/common/makefile.common
