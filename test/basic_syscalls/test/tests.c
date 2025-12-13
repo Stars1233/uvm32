@@ -49,8 +49,10 @@ void test_syscalls(void) {
     TEST_ASSERT_EQUAL('G', uvm32_arg_getval(&vmst, &evt, ARG0));
 
     // run vm to completion
+    TEST_ASSERT_EQUAL(false, uvm32_hasEnded(&vmst));
     uvm32_run(&vmst, &evt, 10000);
     TEST_ASSERT_EQUAL(evt.typ, UVM32_EVT_END);
+    TEST_ASSERT_EQUAL(true, uvm32_hasEnded(&vmst));
 }
 
 
