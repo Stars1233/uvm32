@@ -42,7 +42,7 @@ void carve(int x, int y) {
     int dirs[] = {0, 1, 2, 3};
     // Fisher-Yates shuffle
     for (int i = 3; i > 0; i--) {
-        int j = mulberry32() % (i + 1);
+        int j = (unsigned)mulberry32() % (i + 1);
         int tmp = dirs[i];
         dirs[i] = dirs[j];
         dirs[j] = tmp;
