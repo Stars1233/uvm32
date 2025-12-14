@@ -19,13 +19,36 @@
 #define WIDTH 320
 #define HEIGHT 200
 
-#define WINDOW_WIDTH WIDTH*2
-#define WINDOW_HEIGHT HEIGHT*2
+#define WINDOW_WIDTH WIDTH*3
+#define WINDOW_HEIGHT HEIGHT*3
 
-// TBD replace with queue of keypresses
-uint16_t last_keyscancode;
-bool last_keyvalid = false;
-bool last_keypressed = false;
+// circular buffer of keypresses, so vm code can read them as it's ready
+typedef struct {
+    bool down;
+    uint16_t scancode;
+} keyevent_t;
+
+#define KEYBUFFER_LEN 8
+static keyevent_t keyBuffer[KEYBUFFER_LEN];
+static int keyBufferWr = 0;
+static int keyBufferRd = 0;
+
+void key_enq(uint16_t scancode, bool down) {
+    keyBuffer[keyBufferWr].scancode = scancode;
+    keyBuffer[keyBufferWr].down = down;
+
+    keyBufferWr = (keyBufferWr + 1) % KEYBUFFER_LEN;
+}
+
+bool key_deq(keyevent_t *ke) {
+   if (keyBufferWr != keyBufferRd) {
+        *ke = keyBuffer[keyBufferRd];
+        keyBufferRd = (keyBufferRd + 1) % KEYBUFFER_LEN;
+        return true;
+    } else {
+        return false;
+    }
+}
 
 static uint8_t *read_file(const char* filename, int *len) {
     FILE* f = fopen(filename, "rb");
@@ -185,16 +208,12 @@ int main(int argc, char *argv[]) {
             break;
             case SDL_EVENT_KEY_DOWN:
                 if (!event.key.repeat) {
-                    last_keyscancode = event.key.scancode;
-                    last_keypressed = true;
-                    last_keyvalid = true;
+                    key_enq(event.key.scancode, true);
                 }
             break;
             case SDL_EVENT_KEY_UP:
                 if (!event.key.repeat) {
-                    last_keyscancode = event.key.scancode;
-                    last_keypressed = false;
-                    last_keyvalid = true;
+                    key_enq(event.key.scancode, false);
                 }
             break;
         }
@@ -281,15 +300,15 @@ int main(int argc, char *argv[]) {
                         SDL_RenderTexture(renderer, render_target, &src_rect, &dst_rect);
                         SDL_RenderPresent(renderer);
                     } break;
-                    case UVM32_SYSCALL_GETKEY:
-                        if (last_keyvalid) {
-                            uint32_t code = (last_keypressed ? 0x80000000 : 0) | last_keyscancode;
+                    case UVM32_SYSCALL_GETKEY: {
+                        keyevent_t ke;
+                        if (key_deq(&ke)) {
+                            uint32_t code = (ke.down ? 0x80000000 : 0) | ke.scancode;
                             uvm32_arg_setval(vmst, &evt, RET, code);
                         } else {
                             uvm32_arg_setval(vmst, &evt, RET, 0xFFFFFFFF);
                         }
-                        last_keyvalid = false;
-                    break;
+                    } break;
                     default:
                         printf("Unhandled syscall 0x%08x\n", evt.data.syscall.code);
                     break;
