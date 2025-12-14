@@ -24,6 +24,10 @@ pub inline fn syscall(id: u32, param1: u32, param2: u32) u32 {
     return val;
 }
 
+pub inline fn renderAudio(audbuf: [*]const i16, len:u32) void {
+    _ = syscall(uvm32.UVM32_SYSCALL_RENDERAUDIO, @intFromPtr(audbuf), len);
+}
+
 pub inline fn render(fb: [*]const u8, len:u32) void {
     _ = syscall(uvm32.UVM32_SYSCALL_RENDER, @intFromPtr(fb), len);
 }

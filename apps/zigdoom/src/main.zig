@@ -198,6 +198,9 @@ fn submain() !void {
 
     while(true) {
         pd.doom_update();
+        const doomSndBuf: [*]i16 = pd.doom_get_sound_buffer();
+        uvm.renderAudio(doomSndBuf, 2048);
+
         const fb: [*]const u8 = pd.doom_get_framebuffer(4);
         uvm.render(fb, WIDTH * HEIGHT * 4);
 

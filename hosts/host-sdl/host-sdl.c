@@ -33,6 +33,12 @@ static keyevent_t keyBuffer[KEYBUFFER_LEN];
 static int keyBufferWr = 0;
 static int keyBufferRd = 0;
 
+// circular buffer of audio samples, so vm code can read them as it's ready
+#define AUDIOBUFFER_LEN 4096
+static int16_t audioBuffer[AUDIOBUFFER_LEN];
+static int audioBufferWr = 0;
+static int audioBufferRd = 0;
+
 void key_enq(uint16_t scancode, bool down) {
     keyBuffer[keyBufferWr].scancode = scancode;
     keyBuffer[keyBufferWr].down = down;
@@ -49,6 +55,22 @@ bool key_deq(keyevent_t *ke) {
         return false;
     }
 }
+
+void audio_enq(int16_t sample) {
+    audioBuffer[audioBufferWr] = sample;
+    audioBufferWr = (audioBufferWr + 1) % AUDIOBUFFER_LEN;
+}
+
+bool audio_deq(int16_t *sample) {
+   if (audioBufferWr != audioBufferRd) {
+        *sample = audioBuffer[audioBufferRd];
+        audioBufferRd = (audioBufferRd + 1) % AUDIOBUFFER_LEN;
+        return true;
+    } else {
+        return false;
+    }
+}
+
 
 static uint8_t *read_file(const char* filename, int *len) {
     FILE* f = fopen(filename, "rb");
@@ -107,6 +129,27 @@ void usage(const char *name) {
     exit(1);
 }
 
+void audiocb(void *userdata, SDL_AudioStream *stream, int additional_amount, int total_amount) {
+    if (audioBufferWr == audioBufferRd) { // empty
+        return;
+    }
+    
+    while(total_amount > 0) {
+        int16_t sample[2];
+
+        // always expect audio in pairs
+        if (audio_deq(&sample[0])) {
+            if (audio_deq(&sample[1])) {
+                if (!SDL_PutAudioStreamData(stream, sample, 4)) {
+                    printf("audio write failed\r\n");
+                }
+            }
+        } else {
+            return;
+        }
+        total_amount -= 4;
+    }
+}
 
 
 int main(int argc, char *argv[]) {
@@ -199,6 +242,19 @@ int main(int argc, char *argv[]) {
     render_target = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, WIDTH, HEIGHT);
     SDL_SetTextureScaleMode(render_target, SDL_SCALEMODE_NEAREST);
 
+    SDL_AudioSpec srcspec = {
+        .format = SDL_AUDIO_S16,
+        .channels = 2,
+        .freq = 44100,
+    };
+
+    SDL_AudioStream *stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &srcspec, audiocb, NULL);
+    if (NULL == stream) {
+        printf("Could not setup audio!\n");
+        return 1;
+    }
+    SDL_ResumeAudioStreamDevice(stream);
+
     while (isrunning) {
         SDL_PollEvent(&event);
 
@@ -276,6 +332,15 @@ int main(int argc, char *argv[]) {
                     } break;
                     case UVM32_SYSCALL_GETC: {
                         uvm32_arg_setval(vmst, &evt, RET, 0xFFFFFFFF);
+                    } break;
+                    case UVM32_SYSCALL_RENDERAUDIO: {
+                        uvm32_slice_t buf = uvm32_arg_getslice(vmst, &evt, ARG0, ARG1);
+                        printf("Got audio buf len=%d\n", buf.len);
+                        int16_t *samples = (int16_t *)buf.ptr;
+                        for (int i=0;i<buf.len/2;i++) {
+                            audio_enq(samples[i]);
+                        }
+
                     } break;
                     case UVM32_SYSCALL_RENDER: {
                         uvm32_slice_t buf = uvm32_arg_getslice(vmst, &evt, ARG0, ARG1);
