@@ -4,7 +4,7 @@
 #include "../common/uvm32_common_custom.h"
 
 #include "rom-header.h"
-#include "shared.h"
+#include "../shared.h"
 
 static uvm32_state_t vmst;
 static uvm32_evt_t evt;

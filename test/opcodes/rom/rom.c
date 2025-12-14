@@ -1,5 +1,5 @@
 #include "uvm32_target.h"
-#include "shared.h"
+#include "../shared.h"
 
 void main(void) {
     switch(syscall(SYSCALL_PICKTEST, 0, 0)) {
