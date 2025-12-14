@@ -59,4 +59,20 @@ void test_auipc(void) {
     TEST_ASSERT_EQUAL(vmst._core.regs[6], vmst._core.regs[5] + 4);
 }
 
+void test_blt(void) {
+    uvm32_run(&vmst, &evt, 100);
+    // check for picktest syscall
+    TEST_ASSERT_EQUAL(evt.typ, UVM32_EVT_SYSCALL);
+    TEST_ASSERT_EQUAL(evt.data.syscall.code, SYSCALL_PICKTEST);
+    uvm32_arg_setval(&vmst, &evt, RET, TEST2);
+
+    uvm32_run(&vmst, &evt, 100);
+    TEST_ASSERT_EQUAL(evt.typ, UVM32_EVT_SYSCALL);
+    TEST_ASSERT_EQUAL(evt.data.syscall.code, UVM32_SYSCALL_PRINTLN);
+
+    // run vm to completion
+    uvm32_run(&vmst, &evt, 100);
+    TEST_ASSERT_EQUAL(evt.typ, UVM32_EVT_END);
+}
+
 

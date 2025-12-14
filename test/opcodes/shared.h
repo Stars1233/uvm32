@@ -3,4 +3,5 @@
 
 enum {
     TEST1,
+    TEST2,
 };
