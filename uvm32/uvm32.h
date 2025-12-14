@@ -41,6 +41,7 @@ SOFTWARE.
 // Setup and hooks for mini-rv32ima emulator core
 #define MINIRV32_DECORATE static
 #define MINIRV32_RETURN_TRAP
+#define MINIRV32_NO_TIMERS_NO_CYCLES
 #define MINI_RV32_RAM_SIZE UVM32_MEMORY_SIZE
 #define MINIRV32_POSTEXEC(pc, ir, retval) {if (retval > 0) return retval;}
 uint32_t _uvm32_extramLoad(void *userdata, uint32_t addr, uint32_t accessTyp);

@@ -74,14 +74,14 @@ struct MiniRV32IMAState
 
 	uint32_t pc;
 	uint32_t mstatus;
+#ifndef MINIRV32_NO_TIMERS_NO_CYCLES
 	uint32_t cyclel;
 	uint32_t cycleh;
-
 	uint32_t timerl;
 	uint32_t timerh;
 	uint32_t timermatchl;
 	uint32_t timermatchh;
-
+#endif
 	uint32_t mscratch;
 	uint32_t mtvec;
 	uint32_t mie;
@@ -117,6 +117,7 @@ MINIRV32_DECORATE int32_t MiniRV32IMAStep(void *userdata, struct MiniRV32IMAStat
 MINIRV32_STEPPROTO
 #endif
 {
+#ifndef MINIRV32_NO_TIMERS_NO_CYCLES
 	uint32_t new_timer = CSR( timerl ) + elapsedUs;
 	if( new_timer < CSR( timerl ) ) CSR( timerh )++;
 	CSR( timerl ) = new_timer;
@@ -133,12 +134,16 @@ MINIRV32_STEPPROTO
 	// If WFI, don't run processor.
 	if( CSR( extraflags ) & 4 )
 		return 1;
+#endif
 
 	uint32_t trap = 0;
 	uint32_t rval = 0;
 	uint32_t pc = CSR( pc );
+#ifndef MINIRV32_NO_TIMERS_NO_CYCLES
 	uint32_t cycle = CSR( cyclel );
+#endif
 
+#ifndef MINIRV32_NO_TIMERS_NO_CYCLES
 	if( ( CSR( mip ) & (1<<7) ) && ( CSR( mie ) & (1<<7) /*mtie*/ ) && ( CSR( mstatus ) & 0x8 /*mie*/) )
 	{
 		// Timer interrupt.
@@ -146,11 +151,14 @@ MINIRV32_STEPPROTO
 		pc -= 4;
 	}
 	else // No timer interrupt?  Execute a bunch of instructions.
+#endif
 	for( int icount = 0; icount < count; icount++ )
 	{
 		uint32_t ir = 0;
 		rval = 0;
+#ifndef MINIRV32_NO_TIMERS_NO_CYCLES
 		cycle++;
+#endif
 		uint32_t ofs_pc = pc - MINIRV32_RAM_IMAGE_OFFSET;
 
 		if( ofs_pc >= MINI_RV32_RAM_SIZE )
@@ -347,7 +355,9 @@ MINIRV32_STEPPROTO
 						case 0x340: rval = CSR( mscratch ); break;
 						case 0x305: rval = CSR( mtvec ); break;
 						case 0x304: rval = CSR( mie ); break;
+#ifndef MINIRV32_NO_TIMERS_NO_CYCLES
 						case 0xC00: rval = cycle; break;
+#endif
 						case 0x344: rval = CSR( mip ); break;
 						case 0x341: rval = CSR( mepc ); break;
 						case 0x300: rval = CSR( mstatus ); break; //mstatus
@@ -530,8 +540,10 @@ MINIRV32_STEPPROTO
 #endif
 	}
 
+#ifndef MINIRV32_NO_TIMERS_NO_CYCLES
 	if( CSR( cyclel ) > cycle ) CSR( cycleh )++;
 	SETCSR( cyclel, cycle );
+#endif
 	SETCSR( pc, pc );
 	return 0;
 }
