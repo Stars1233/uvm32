@@ -2,7 +2,7 @@
 
 uvm32 is a minimalist, dependency-free virtual machine sandbox designed for microcontrollers and other resource-constrained devices. Single C file, no dynamic memory allocations, asynchronous design, pure C99.
 
-On an [STM32L0](https://www.st.com/en/microcontrollers-microprocessors/stm32l0-series.html) (ARM Cortex-M0+) the required footprint is under 4KB flash/1KB RAM.
+On an [STM32L0](https://www.st.com/en/microcontrollers-microprocessors/stm32l0-series.html) (ARM Cortex-M0+) the required footprint is under 3KB flash/1KB RAM.
 
 uvm32 is a RISC-V emulator, wrapped in a management interface and provided with tools to build efficient code to run in it.
 

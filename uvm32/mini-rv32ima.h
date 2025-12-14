@@ -45,12 +45,14 @@
 	#define MINIRV32_HANDLE_MEM_LOAD_CONTROL(...);
 #endif
 
+#ifndef MINIRV32_NO_ZICSR
 #ifndef MINIRV32_OTHERCSR_WRITE
 	#define MINIRV32_OTHERCSR_WRITE(...);
 #endif
 
 #ifndef MINIRV32_OTHERCSR_READ
 	#define MINIRV32_OTHERCSR_READ(...);
+#endif
 #endif
 
 #ifndef MINIRV32_CUSTOM_MEMORY_BUS
@@ -82,6 +84,7 @@ struct MiniRV32IMAState
 	uint32_t timermatchl;
 	uint32_t timermatchh;
 #endif
+#ifndef MINIRV32_NO_ZICSR
 	uint32_t mscratch;
 	uint32_t mtvec;
 	uint32_t mie;
@@ -90,6 +93,7 @@ struct MiniRV32IMAState
 	uint32_t mepc;
 	uint32_t mtval;
 	uint32_t mcause;
+#endif
 
 	// Note: only a few bits are used.  (Machine = 3, User = 0)
 	// Bits 0..1 = privilege.
@@ -342,6 +346,7 @@ MINIRV32_STEPPROTO
 				{
 					uint32_t csrno = ir >> 20;
 					uint32_t microop = ( ir >> 12 ) & 0x7;
+#ifndef MINIRV32_NO_ZICSR
 					if( (microop & 3) ) // It's a Zicsr function.
 					{
 						int rs1imm = (ir >> 15) & 0x1f;
@@ -407,9 +412,12 @@ MINIRV32_STEPPROTO
 							break;
 						}
 					}
-					else if( microop == 0x0 ) // "SYSTEM" 0b000
+					else
+#endif
+                    if( microop == 0x0 ) // "SYSTEM" 0b000
 					{
 						rdid = 0;
+#ifndef MINIRV32_NO_ZICSR
 						if( ( ( csrno & 0xff ) == 0x02 ) )  // MRET
 						{
 							//https://raw.githubusercontent.com/riscv/virtual-memory/main/specs/663-Svpbmt.pdf
@@ -420,7 +428,10 @@ MINIRV32_STEPPROTO
 							SETCSR( mstatus , (( startmstatus & 0x80) >> 4) | ((startextraflags&3) << 11) | 0x80 );
 							SETCSR( extraflags, (startextraflags & ~3) | ((startmstatus >> 11) & 3) );
 							pc = CSR( mepc ) -4;
-						} else {
+						} 
+                        else
+#endif
+                        {
 							switch (csrno) {
 							case 0:
 								trap = ( CSR( extraflags ) & 3) ? (11+1) : (8+1); // ECALL; 8 = "Environment call from U-mode"; 11 = "Environment call from M-mode"
@@ -441,6 +452,7 @@ MINIRV32_STEPPROTO
 						trap = (2+1); 				// Note micrrop 0b100 == undefined.
 					break;
 				}
+#ifndef MINIRV32_NO_ATOMICS
 				case 0x2f: // RV32A (0b00101111)
 				{
 					uint32_t rs1 = REG((ir >> 15) & 0x1f);
@@ -487,6 +499,7 @@ MINIRV32_STEPPROTO
 					}
 					break;
 				}
+#endif
 				default: trap = (2+1); // Fault: Invalid opcode.
 			}
 
