@@ -1,7 +1,8 @@
 # 🌱 uvm32
 
 ![](https://github.com/ringtailsoftware/uvm32/actions/workflows/build.yml/badge.svg)
-![](https://ringtailsoftware.github.io/uvm32/badge.svg)
+
+![](https://ringtailsoftware.github.io/uvm32/badge.svg) (uvm32.c)
 
 uvm32 is a minimalist, dependency-free virtual machine sandbox designed for microcontrollers and other resource-constrained devices. Single C file, no dynamic memory allocations, asynchronous design, pure C99.
 
