@@ -95,46 +95,6 @@ When the external RAM is written to by the VM, the dirty flag will be set. The f
 
     bool uvm32_extramDirty(uvm32_state_t *vmst)
 
-## syscall ABI
-
-All communication between bytecode and the vm host is performed via syscalls.
-
-To make a syscall, register `a7` is set with the syscall number (a `UVM32_SYSCALL_x`) and `a0`, `a1` are set with the syscall parameters. The response is returned in `a2`.
-
-[target.h](common/uvm32_target.h#L12)
-
-```c
-static uint32_t syscall(uint32_t id, uint32_t param1, uint32_t param2) {
-    register uint32_t a0 asm("a0") = (uint32_t)(param1);
-    register uint32_t a1 asm("a1") = (uint32_t)(param2);
-    register uint32_t a2 asm("a2");
-    register uint32_t a7 asm("a7") = (uint32_t)(id);
-
-    asm volatile (
-        "ecall"
-        : "=r"(a2) // output
-        : "r"(a7), "r"(a0), "r"(a1) // input
-        : "memory"
-    );
-    return a2;
-}
-```
-The [RISC-V SBI](https://github.com/riscv-non-isa/riscv-sbi-doc/blob/master/riscv-sbi.adoc) is not followed, a simpler approach is taken.
-
-## syscalls
-
-There are two inbuilt syscalls used by uvm32, `halt()` and `yield()`.
-
-`halt()` tells the host that the program has ended normally. `yield()` tells the host that the program requires more instructions to be executed. Halt is handled internally and transitions the VM to `UVM32_STATUS_ENDED`, `yield()` is handled in the VM host like other syscalls. 
-
-Syscalls are handled in the host by reading the syscall identifier, then using the provided functions to get arguments and set a return response. Direct access to the VM's memory space is not allowed, to avoid memory corruption issues.
-
-The following functions are used to access syscall parameters safely: 
-
-    uint32_t uvm32_getval(uvm32_state_t *vmst, uvm32_evt_t *evt, uvm32_arg_t);
-    const char *uvm32_getcstr(uvm32_state_t *vmst, uvm32_evt_t *evt, uvm32_arg_t);
-    void uvm32_setval(uvm32_state_t *vmst, uvm32_evt_t *evt, uvm32_arg_t, uint32_t val);
-    uvm32_evt_syscall_buf_t uvm32_getbuf(uvm32_state_t *vmst, uvm32_evt_t *evt, uvm32_arg_t argPtr, uvm32_arg_t argLen);
 
 ## Event driven operation
 
