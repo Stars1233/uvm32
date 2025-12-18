@@ -38,6 +38,15 @@ SOFTWARE.
 // Include definitions for required syscalls
 #include "uvm32_sys.h"
 
+typedef union __attribute__((packed)) {
+    uint32_t u32;
+    uint16_t u16;
+    uint8_t u8;
+    int8_t i8;
+    int16_t i16;
+    int32_t i32;
+} uvm32_val_t;
+
 // Setup and hooks for mini-rv32ima emulator core
 #define MINIRV32_DECORATE static
 #define MINIRV32_RETURN_TRAP
@@ -50,27 +59,19 @@ SOFTWARE.
 #define MINIRV32_HANDLE_MEM_LOAD_CONTROL( addy, rval ) rval = _uvm32_extramLoad(userdata, addy, ( ir >> 12 ) & 0x7);
 #define MINIRV32_HANDLE_MEM_STORE_CONTROL( addy, val ) if( _uvm32_extramStore(userdata, addy, val, ( ir >> 12 ) & 0x7) ) return val;
 #define MINIRV32_CUSTOM_MEMORY_BUS
-#define MINIRV32_STORE4( ofs, val ) _uvm32_store4(image, ofs, val)
-#define MINIRV32_STORE2( ofs, val ) _uvm32_store2(image, ofs, val)
-#define MINIRV32_STORE1( ofs, val ) _uvm32_store1(image, ofs, val)
-#define MINIRV32_LOAD4( ofs ) _uvm32_load4(image, ofs)
-#define MINIRV32_LOAD2( ofs ) _uvm32_load2(image, ofs)
-#define MINIRV32_LOAD1( ofs ) _uvm32_load1(image, ofs)
-#define MINIRV32_LOAD2_SIGNED( ofs ) _uvm32_load2s(image, ofs)
-#define MINIRV32_LOAD1_SIGNED( ofs ) _uvm32_load1s(image, ofs)
+#define MINIRV32_STORE4( ofs, val ) ((uvm32_val_t *)(&image[ofs]))->u32 = val
+#define MINIRV32_STORE2( ofs, val ) ((uvm32_val_t *)(&image[ofs]))->u16 = val
+#define MINIRV32_STORE1( ofs, val ) ((uvm32_val_t *)(&image[ofs]))->u8 = val
+#define MINIRV32_LOAD4( ofs ) ((uvm32_val_t *)(&image[ofs]))->u32
+#define MINIRV32_LOAD2( ofs ) ((uvm32_val_t *)(&image[ofs]))->u16
+#define MINIRV32_LOAD1( ofs ) ((uvm32_val_t *)(&image[ofs]))->u8
+#define MINIRV32_LOAD2_SIGNED( ofs ) ((uvm32_val_t *)(&image[ofs]))->i16
+#define MINIRV32_LOAD1_SIGNED( ofs ) ((uvm32_val_t *)(&image[ofs]))->i8
 #ifndef MINIRV32_IMPLEMENTATION
 #define MINIRV32_STEPPROTO
 #else
 static uint32_t _uvm32_extramLoad(void *userdata, uint32_t addr, uint32_t accessTyp);
 static uint32_t _uvm32_extramStore(void *userdata, uint32_t addr, uint32_t val, uint32_t accessTyp);
-static void _uvm32_store4(void *p, uint32_t off, uint32_t val);
-static void _uvm32_store2(void *p, uint32_t off, uint16_t val);
-static void _uvm32_store1(void *p, uint32_t off, uint8_t val);
-static uint32_t _uvm32_load4(void *p, uint32_t off);
-static uint16_t _uvm32_load2(void *p, uint32_t off);
-static uint8_t _uvm32_load1(void *p, uint32_t off);
-static int16_t _uvm32_load2s(void *p, uint32_t off);
-static int8_t _uvm32_load1s(void *p, uint32_t off);
 #endif
 #include "mini-rv32ima.h"
 
@@ -127,7 +128,7 @@ typedef struct {
 
 /*! Internal state of uvm32 */
 typedef enum {
-    UVM32_STATUS_PAUSED,
+    UVM32_STATUS_PAUSED = 0,
     UVM32_STATUS_RUNNING,
     UVM32_STATUS_ERROR,
     UVM32_STATUS_ENDED,

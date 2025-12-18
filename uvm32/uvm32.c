@@ -45,7 +45,7 @@ SOFTWARE.
 
 #ifndef UVM32_MEMCPY
 #define UVM32_MEMCPY uvm32_memcpy
-void *uvm32_memcpy(void *dst, const void *src, size_t len) {
+static inline void *uvm32_memcpy(void *dst, const void *src, size_t len) {
     uint8_t *d = (uint8_t *)dst;
     const uint8_t *s = (const uint8_t *)src;
     while(len--) {
@@ -57,7 +57,7 @@ void *uvm32_memcpy(void *dst, const void *src, size_t len) {
 
 #ifndef UVM32_MEMSET
 #define UVM32_MEMSET uvm32_memset
-void *uvm32_memset(void *buf, int c, size_t len) {
+static inline void *uvm32_memset(void *buf, int c, size_t len) {
     uint8_t *b = (uint8_t *)buf;
     while(len--) {
         *(b++) = c;
@@ -101,11 +101,12 @@ static void setStatusErr(uvm32_state_t *vmst, uvm32_err_t err) {
 
 void uvm32_init(uvm32_state_t *vmst) {
     UVM32_MEMSET(vmst, 0x00, sizeof(uvm32_state_t));
-    vmst->_status = UVM32_STATUS_PAUSED;
 
-    vmst->_extramLen = 0;
-    vmst->_extram = (uint8_t *)NULL;
-    vmst->_extramDirty = false;
+    // handled by memset
+    // vmst->_status = UVM32_STATUS_PAUSED;
+    // vmst->_extramLen = 0;
+    // vmst->_extram = (uint8_t *)NULL;
+    // vmst->_extramDirty = false;
 
     vmst->_core.pc = MINIRV32_RAM_IMAGE_OFFSET;
     // https://projectf.io/posts/riscv-cheat-sheet/
@@ -113,8 +114,9 @@ void uvm32_init(uvm32_state_t *vmst) {
     // la	sp, _sstack
     // addi	sp,sp,-16
     vmst->_core.regs[2] = ((MINIRV32_RAM_IMAGE_OFFSET + UVM32_MEMORY_SIZE) & ~0xF) - 16; // 16 byte align stack
-    vmst->_core.regs[10] = 0x00;  //hart ID
-    vmst->_core.regs[11] = 0;
+    // handled by memset
+    // vmst->_core.regs[10] = 0x00;  //hart ID
+    //vmst->_core.regs[11] = 0;
     vmst->_core.extraflags |= 3;  // Machine-mode.
 }
 
@@ -411,6 +413,7 @@ uvm32_slice_t uvm32_arg_getslice_fixed(uvm32_state_t *vmst, uvm32_evt_t *evt, uv
 static uint32_t _uvm32_extramLoad(void *userdata, uint32_t addr, uint32_t accessTyp) {
     uvm32_state_t *vmst = (uvm32_state_t *)userdata;
     addr -= UVM32_EXTRAM_BASE;
+    const uvm32_val_t *v = ((uvm32_val_t *)(&((uint8_t *)vmst->_extram)[addr]));
 
     if (vmst->_extram != NULL) {
         if (addr < vmst->_extramLen) {
@@ -418,24 +421,23 @@ static uint32_t _uvm32_extramLoad(void *userdata, uint32_t addr, uint32_t access
             // Any other value will have caused UVM32_ERR_INTERNAL_CORE
             switch(accessTyp) {
                 case 0:
-                    return _uvm32_load1s(vmst->_extram, addr);
+                    return v->i8;
                 break;
                 case 1:
-                    return _uvm32_load2s(vmst->_extram, addr);
+                    return v->i16;
                 break;
                 case 2:
-                    return _uvm32_load4(vmst->_extram, addr);
+                    return v->u32;
                 break;
                 case 5:
-                    return _uvm32_load2(vmst->_extram, addr);
+                    return v->u16;
                 break;
                 // have a default case to keep coverage check happy
                 // no other values are possible here
                 default:    // fall through
                 case 4:
-                    return _uvm32_load1(vmst->_extram, addr);
+                    return v->u8;
                 break;
-
             }
         } else {
             // Out of bounds
@@ -448,19 +450,21 @@ static uint32_t _uvm32_extramLoad(void *userdata, uint32_t addr, uint32_t access
 static uint32_t _uvm32_extramStore(void *userdata, uint32_t addr, uint32_t val, uint32_t accessTyp) {
     uvm32_state_t *vmst = (uvm32_state_t *)userdata;
     addr -= UVM32_EXTRAM_BASE;
+    uvm32_val_t *v = ((uvm32_val_t *)(&((uint8_t *)vmst->_extram)[addr]));
+
     if (vmst->_extram != NULL) {
         if (addr < vmst->_extramLen) {
             switch(accessTyp) {
                 case 1:
-                    _uvm32_store2(vmst->_extram, addr, val);
+                    v->u16 = val;
                 break;
                 case 2:
-                    _uvm32_store4(vmst->_extram, addr, val);
+                    v->u32 = val;
                 break;
                 // no other values are valid here and will be stopped above
                 default: // fall through
                 case 0:
-                    _uvm32_store1(vmst->_extram, addr, val);
+                    v->u8 = val;
                 break;
             }
             vmst->_extramDirty = true;
@@ -488,35 +492,4 @@ uint32_t uvm32_getProgramCounter(const uvm32_state_t *vmst) {
     return vmst->_core.pc;
 }
 
-// Access of memory bus in alignment safe way
-static void _uvm32_store4(void *p, uint32_t off, uint32_t val) {
-    UVM32_MEMCPY((uint8_t *)p + off, &val, 4);
-}
-static void _uvm32_store2(void *p, uint32_t off, uint16_t val) {
-    UVM32_MEMCPY((uint8_t *)p + off, &val, 2);
-}
-static void _uvm32_store1(void *p, uint32_t off, uint8_t val) {
-    ((uint8_t *)p)[off] = val;
-}
-static uint32_t _uvm32_load4(void *p, uint32_t off) {
-    uint32_t v;
-    UVM32_MEMCPY(&v, (uint8_t *)p + off, 4);
-    return v;
-}
-static uint16_t _uvm32_load2(void *p, uint32_t off) {
-    uint16_t v;
-    UVM32_MEMCPY(&v, (uint8_t *)p + off, 2);
-    return v;
-}
-static uint8_t _uvm32_load1(void *p, uint32_t off) {
-    return ((uint8_t *)p)[off];
-}
-static int16_t _uvm32_load2s(void *p, uint32_t off) {
-    int16_t v;
-    UVM32_MEMCPY(&v, (uint8_t *)p + off, 2);
-    return v;
-}
-static int8_t _uvm32_load1s(void *p, uint32_t off) {
-    return ((int8_t *)p)[off];
-}
 
