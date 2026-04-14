@@ -309,6 +309,14 @@ uint32_t uvm32_run(uvm32_state_t *vmst, uvm32_evt_t *evt, uint32_t instr_meter) 
                 setStatusErr(vmst, UVM32_ERR_MEM_RD);
                 setup_err_evt(vmst, evt);
             break;
+            case 8:
+                setStatusErr(vmst, UVM32_ERR_MEM_WR);
+                setup_err_evt(vmst, evt);
+            break;
+            case 3: // ebreak
+              vmst->_ioevt.typ = UVM32_EVT_BREAK;
+              setStatus(vmst, UVM32_STATUS_PAUSED);
+            break;
             default:
                 // unhandled exception
                 setStatusErr(vmst, UVM32_ERR_INTERNAL_CORE);
