@@ -98,6 +98,7 @@ typedef enum {
 typedef enum {
     UVM32_EVT_ERR,      /*! Error has occurred, details in uvm32_evt_t data.err field */
     UVM32_EVT_SYSCALL,  /*! A syscall has been requested, details in uvm32__evt_t data.syscall field */
+    UVM32_EVT_BREAK,
     UVM32_EVT_END,      /*! The program has ended by making a UVM32_SYSCALL_HALT */
 } uvm32_evt_typ_t;
 
