@@ -124,7 +124,7 @@ int main(int argc, char *argv[]) {
     * [host-parallel](hosts/host-parallel) parallel vm host running multiple vm instances concurrently, with baked in bytecode
     * [host-arduino](hosts/host-arduino) vm host as Arduino sketch (`make test` to run AVR code in qemu)
     * [host-sdl](hosts/host-sdl) vm host providing framebuffer and audio support (see [apps/zigdoom])
-    * [host-gdbstub] (hosts/host-gdbstub) vm host supporting GDB remote serial protocol connection, acting as a server. Allows gdb debugging of running code
+    * [host-gdbstub](hosts/host-gdbstub) vm host supporting GDB remote serial protocol connection, acting as a server. Allows gdb debugging of running code
  * C sample apps
     * [apps/helloworld](apps/helloworld) C hello world program
     * [apps/heap](apps/heap) Demonstration of `malloc()` on extram in C
