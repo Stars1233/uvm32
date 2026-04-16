@@ -40,6 +40,8 @@ uint32_t metered_run(uint32_t num_instr) {
             case UVM32_EVT_END:
                 TEST_ASSERT_EQUAL(0, 1);    // trigger an assert, we didn't get to 100000 yet
             break;
+            case UVM32_EVT_BREAK:
+            break;
         }
     }
 

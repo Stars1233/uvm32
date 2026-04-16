@@ -313,14 +313,15 @@ uint32_t uvm32_run(uvm32_state_t *vmst, uvm32_evt_t *evt, uint32_t instr_meter) 
                 setStatusErr(vmst, UVM32_ERR_MEM_WR);
                 setup_err_evt(vmst, evt);
             break;
-            case 3: // ebreak
-              vmst->_ioevt.typ = UVM32_EVT_BREAK;
-              setStatus(vmst, UVM32_STATUS_PAUSED);
-            break;
             default:
-                // unhandled exception
-                setStatusErr(vmst, UVM32_ERR_INTERNAL_CORE);
-                setup_err_evt(vmst, evt);
+                if (vmst->useBreak && ret == 3) {   // ebreak
+                    vmst->_ioevt.typ = UVM32_EVT_BREAK;
+                    setStatus(vmst, UVM32_STATUS_PAUSED);
+                } else {
+                    // unhandled exception
+                    setStatusErr(vmst, UVM32_ERR_INTERNAL_CORE);
+                    setup_err_evt(vmst, evt);
+                }
             break;
         }
 
@@ -349,6 +350,10 @@ uint32_t uvm32_run(uvm32_state_t *vmst, uvm32_evt_t *evt, uint32_t instr_meter) 
         }
         return orig_instr_meter - instr_meter;
     }
+}
+
+void uvm32_useBreak(uvm32_state_t *vmst, bool enabled) {
+    vmst->useBreak = enabled;
 }
 
 bool uvm32_hasEnded(const uvm32_state_t *vmst) {

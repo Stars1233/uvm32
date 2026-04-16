@@ -151,6 +151,7 @@ typedef struct {
     uint32_t _extramLen;                    /*! Length of external RAM */
     bool _extramDirty;                      /*! Flag to indicate VM code has modified extram since last run */
     uint32_t garbage;                       /*! Used for returning valid pointer when operations fail */
+    bool useBreak;                          /*! produce UVM32_EVT_BREAK */
 } uvm32_state_t;
 
 /*! Initialise a VM instance */
@@ -196,6 +197,8 @@ uvm32_slice_t uvm32_arg_getslice(uvm32_state_t *vmst, uvm32_evt_t *evt, uvm32_ar
 /*! Read a syscall argument pointer as a slice of known length */
 uvm32_slice_t uvm32_arg_getslice_fixed(uvm32_state_t *vmst, uvm32_evt_t *evt, uvm32_arg_t arg, uint32_t len);
 
+/*! Allow ebreak in code, will generate UVM32_EVT_BREAK */
+void uvm32_useBreak(uvm32_state_t *vmst, bool enabled);
 
 /*! Setup a block of memory to act as external RAM, it will be available on in VM code at address `UVM32_EXTRAM_BASE`. The memory is not copied, so the caller must ensure it remains available until `uvm32_extram()` is called to setup a different region or the VM is ended. */
 void uvm32_extram(uvm32_state_t *vmst, uint8_t *extram, uint32_t len);

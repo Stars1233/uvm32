@@ -58,6 +58,7 @@ int main(int argc, char *argv[]) {
   }
 
   uvm32_init(&vmst);
+  uvm32_useBreak(&vmst, true); // enable ebreak
 
   if (!uvm32_load(&vmst, rom, romlen)) {
     fprintf(stderr, "load failed!\n");
