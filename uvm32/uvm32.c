@@ -121,8 +121,8 @@ void uvm32_init(uvm32_state_t *vmst) {
 }
 
 bool uvm32_load(uvm32_state_t *vmst, const uint8_t *rom, int len) {
-    if (len > UVM32_MEMORY_SIZE) {
-        // too big
+    if (len < 0 || len > UVM32_MEMORY_SIZE) {
+        // invalid length
         return false;
     }
 

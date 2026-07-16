@@ -20,4 +20,8 @@ void test_giant_rom(void) {
     TEST_ASSERT_EQUAL(false, uvm32_load(&vmst, rom_bin, UVM32_MEMORY_SIZE+1)); // if it reads off end of rom_bin, will crash
 }
 
+void test_negative_rom_length(void) {
+    uvm32_init(&vmst);
+    TEST_ASSERT_EQUAL(false, uvm32_load(&vmst, rom_bin, -1));
+}
 
