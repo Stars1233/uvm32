@@ -211,6 +211,32 @@ void test_syscall_args_bufrd_toolarge(void) {
     TEST_ASSERT_EQUAL(evt.data.err.errcode, UVM32_ERR_MEM_RD);
 }
 
+void test_syscall_args_bufrd_overflow_bypass(void) {
+    // run the vm
+    uvm32_run(&vmst, &evt, 1000);
+    // check for picktest syscall
+    TEST_ASSERT_EQUAL(evt.typ, UVM32_EVT_SYSCALL);
+    TEST_ASSERT_EQUAL(evt.data.syscall.code, SYSCALL_PICKTEST);
+    uvm32_arg_setval(&vmst, &evt, RET, SYSCALL_C);
+
+    uvm32_run(&vmst, &evt, 1000);
+    TEST_ASSERT_EQUAL(evt.typ, UVM32_EVT_SYSCALL);
+    TEST_ASSERT_EQUAL(evt.data.syscall.code, SYSCALL_C);
+
+    // ARG0 is a real, in-bounds pointer supplied by the rom. Simulate bytecode
+    // supplying an attacker-controlled huge length in ARG1: previously
+    // (ptrstart + len) wrapped past 2^32 back under the memory limit inside
+    // get_safeptr(), bypassing the bounds check entirely.
+    uvm32_arg_setval(&vmst, &evt, ARG1, 0xFFFFFFFF);
+
+    uvm32_slice_t buf = uvm32_arg_getslice(&vmst, &evt, ARG0, ARG1);
+    TEST_ASSERT_EQUAL(0, buf.len);  // must be safely rejected, not silently overflowed
+    // attempt to run vm, should be stuck in err
+    uvm32_run(&vmst, &evt, 100);
+    TEST_ASSERT_EQUAL(evt.typ, UVM32_EVT_ERR);
+    TEST_ASSERT_EQUAL(evt.data.err.errcode, UVM32_ERR_MEM_RD);
+}
+
 void test_syscall_args_read_badram(void) {
     // run the vm
     uvm32_run(&vmst, &evt, 1000);
